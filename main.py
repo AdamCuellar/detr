@@ -16,7 +16,6 @@ from datasets import build_dataset, get_coco_api_from_dataset
 from engine import evaluate, train_one_epoch
 from models import build_model
 
-
 def get_args_parser():
     parser = argparse.ArgumentParser('Set transformer detector', add_help=False)
     parser.add_argument('--lr', default=1e-4, type=float)
@@ -34,6 +33,12 @@ def get_args_parser():
     # * Backbone
     parser.add_argument('--backbone', default='resnet50', type=str,
                         help="Name of the convolutional backbone to use")
+    parser.add_argument('--pretrained', action='store_false', default=True,
+                        help='Start with pretrained version of specified backbone (if avail)')
+    parser.add_argument('--gp', default=None, type=str, metavar='POOL',
+                        help='Global pool type, one of (fast, avg, max, avgmax, avgmaxc). Model default if None.')
+    parser.add_argument('--interpolation', default='', type=str, metavar='NAME',
+                        help='Image resize interpolation type (overrides model)')
     parser.add_argument('--dilation', action='store_true',
                         help="If true, we replace stride with dilation in the last convolutional block (DC5)")
     parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
@@ -94,6 +99,10 @@ def get_args_parser():
                         help='start epoch')
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--num_workers', default=2, type=int)
+    parser.add_argument('--mean', type=float, nargs='+', default=None, metavar='MEAN',
+                        help='Override mean pixel value of dataset')
+    parser.add_argument('--std', type=float, nargs='+', default=None, metavar='STD',
+                        help='Override std deviation of dataset')
 
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
