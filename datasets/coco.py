@@ -112,11 +112,14 @@ class ConvertCocoPolysToMask(object):
         return image, target
 
 
-def make_coco_transforms(image_set):
+def make_coco_transforms(image_set, args):
+
+    mean = [0.485, 0.456, 0.406] if args.mean is None else args.mean
+    std = [0.229, 0.224, 0.225] if args.std is None else args.std
 
     normalize = T.Compose([
         T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        T.Normalize(mean, std)
     ])
 
     scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
@@ -145,14 +148,25 @@ def make_coco_transforms(image_set):
 
 
 def build(image_set, args):
-    root = Path(args.coco_path)
+    root = Path(args.data_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
     mode = 'instances'
-    PATHS = {
-        "train": (root / "train2017", root / "annotations" / f'{mode}_train2017.json'),
-        "val": (root / "val2017", root / "annotations" / f'{mode}_val2017.json'),
-    }
+    if image_set == 'train':
+        argsJson = args.train_json
+    else:
+        argsJson = args.val_json
+
+    if argsJson is None:
+        PATHS = {
+            "train": (root / "train2017", root / "annotations" / f'{mode}_train2017.json'),
+            "val": (root / "val2017", root / "annotations" / f'{mode}_val2017.json'),
+        }
+    else:
+        PATHS = {
+            "train": (root, argsJson),
+            "val": (root, argsJson),
+        }
 
     img_folder, ann_file = PATHS[image_set]
-    dataset = CocoDetection(img_folder, ann_file, transforms=make_coco_transforms(image_set), return_masks=args.masks)
+    dataset = CocoDetection(img_folder, ann_file, transforms=make_coco_transforms(image_set, args), return_masks=args.masks)
     return dataset
