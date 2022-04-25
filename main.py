@@ -84,6 +84,8 @@ def get_args_parser():
                         help="Relative classification weight of the no-object class")
 
     # dataset parameters
+    # parser.add_argument('--img-size', default=None, type=int,
+    #                     metavar='N', help='Input image dimension, uses model default if empty')
     parser.add_argument('--dataset_file', default='coco')
     parser.add_argument('--data_path', type=str)
     parser.add_argument('--train_json', type=str, default=None, help="Override path to training JSON file")
@@ -188,7 +190,7 @@ def main(args):
         else:
             checkpoint = torch.load(args.resume, map_location='cpu')
         model_without_ddp.load_state_dict(checkpoint['model'])
-        if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
+        if (not args.eval or not args.onnx_export) and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
             args.start_epoch = checkpoint['epoch'] + 1
